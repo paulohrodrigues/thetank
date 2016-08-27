@@ -1,4 +1,4 @@
-# coding: latin1
+# coding: utf8
 import pygame, sys
 from pygame.locals import *
 import random 
@@ -11,26 +11,8 @@ fpsClock = pygame.time.Clock()
 #------ fim dos principios iniciais padrão do pygame ------------------
 
 
-#lista que carregara todas as balas instanciadas
-bala=list()
 
-#posição inicial do tank
-x=100	
-y=100
-
-#auxiliar para controlar o evento de keydown e keyup 
-keyPressed=False
-
-#inicializa orientação do tank durante o jogo
-orientacao="BAIXO"
-
-#momento de tiro
-orientacaoTiro="NOT"
-
-jogo="play"
-
-
-
+#inicio dos objetos-----------------------------------
 
 class Colisao(object):
 	def colisorQuadrado(self,objeto1,objeto2):
@@ -49,9 +31,6 @@ class Colisao(object):
 		if(yObjeto1>yObjeto2+tamanhoObjeto2):
 			return False
 		return True
-
-
-
 
 
 
@@ -184,6 +163,57 @@ class Tiro(object):
 			pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (self.x, self.y+12, 5, 5))
 
 
+
+#fim objetos----------------------------------------------------------------------------
+
+
+#variaveis globais---------------------------------------
+#lista que carregara todas as balas instanciadas
+bala=list()
+#posição inicial do tank
+x=100	
+y=100
+#auxiliar para controlar o evento de keydown e keyup 
+keyPressed=False
+#inicializa orientação do tank durante o jogo
+orientacao="BAIXO"
+#momento de tiro
+orientacaoTiro="NOT"
+jogo="begin"
+listaInimigo=list()
+listaInimigo.append(Inimigo(DISPLAYSURF))
+inimigosQTD=1
+matouInimigo=False
+colisao=Colisao()
+piscaLetra=float(0)
+inicializa=False
+#variaveis globais---------------------------------------
+
+
+
+
+def zera():
+	global bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
+	inicializa=False
+	bala=list()
+	#posição inicial do tank
+	x=100	
+	y=100
+	#auxiliar para controlar o evento de keydown e keyup 
+	keyPressed=False
+	#inicializa orientação do tank durante o jogo
+	orientacao="BAIXO"
+	#momento de tiro
+	orientacaoTiro="NOT"
+	jogo="gameover"
+	listaInimigo=list()
+	listaInimigo.append(Inimigo(DISPLAYSURF))
+	inimigosQTD=1
+	matouInimigo=False
+	colisao=Colisao()
+	piscaLetra=float(0)
+
+
 #função basica para finalizar o jogo ao receber o comando de fechamento
 def finaliza():
 	pygame.quit()
@@ -256,13 +286,6 @@ def tanque(posicao,tamanho):
 		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x-(tamanho/3), y+(tamanho/3), tamanho/3, tamanho/3))
 
 
-listaInimigo=list()
-listaInimigo.append(Inimigo(DISPLAYSURF))
-inimigosQTD=1
-matouInimigo=False
-colisao=Colisao()
-
-
 def controleDeInimigo():
 	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo
 	for i in range(len(listaInimigo)):
@@ -272,6 +295,8 @@ def controleDeInimigo():
 
 def controleDeColisao():
 	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
+
+	#minha bala no Inimigo
 	for i in range(len(listaInimigo)):
 		for j in range(len(bala)):
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
@@ -286,23 +311,37 @@ def controleDeColisao():
 
 	if(matouInimigo==True and inimigosQTD<=5):
 		inimigosQTD+=1
-		for aux in range(inimigosQTD):
+		for aux in range(3):
 			listaInimigo.append(Inimigo(DISPLAYSURF))
 		matouInimigo=False
 
+	#bala do inimigo em mim
 	for k in range(len(listaInimigo)):
 		for l in range(len(listaInimigo[k].bala)):
 
 			if(colisao.colisorQuadrado([5,listaInimigo[k].bala[l].x,listaInimigo[k].bala[l].y],[30,x,y])==True):
 				jogo="gameover"
+				zera()
 				break
 		if(jogo=="gameover"):
+			zera()
 			break
+	#inimigo em mim
+	for m in range(len(listaInimigo)):
+		if(colisao.colisorQuadrado([30,listaInimigo[m].x,listaInimigo[m].y],[30,x,y])==True):
+				jogo="gameover"
+				zera()
+				break
+		if(jogo=="gameover"):
+			zera()
+			break
+
+
 
 
 def telaJogoPrincipal():
 	global event,pygame,keyPressed,orientacaoTiro
-	controleDeInimigo()
+
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
@@ -317,20 +356,45 @@ def telaJogoPrincipal():
 	controleDeColisao()
 	controlePersonagem()
 	tanque(orientacao,30)
-
+	controleDeInimigo()
 
 def telaGameOver():
+	global jogo
+	img = pygame.display.set_mode((500, 500))
+	#importar imagem
+	image = pygame.image.load("url.png")
+	img.blit(image, (110, 150))
+	palavraPiscando("PRESSIONE QUALQUER TECLA PARA VOLTAR!");
+
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
+		if(event.type==KEYDOWN):
+			jogo="begin"
 
-	comprimento_ecra = 500
-	altura_ecra = 500
-	ecra = pygame.display.set_mode((comprimento_ecra, altura_ecra))
 
+def palavraPiscando(texto):
+	global piscaLetra
+	piscaLetra+=1
+	minhaFont = pygame.font.SysFont("monospace", 20)
+	label = minhaFont.render(texto, 1, (255,255,0))
+	if(piscaLetra%5<=3):
+		DISPLAYSURF.blit(label, (30, 450))
+
+def paginaInicial():
+	global jogo,pygame,DISPLAYSURF,piscaLetra
+	img = pygame.display.set_mode((500, 500))
 	#importar imagem
-	image = pygame.image.load("url.png")
-	ecra.blit(image, (110, 150))
+	image = pygame.image.load("fundoInicial.png")
+	img.blit(image, (0, 0))
+
+	palavraPiscando("PRESSIONE QUALQUER TECLA PARA INICIAR!");
+
+	for event in pygame.event.get():	
+		if event.type == QUIT:
+			finaliza()
+		if(event.type==KEYDOWN):
+			jogo="play"
 
 
 def menuTela():
@@ -339,8 +403,8 @@ def menuTela():
 		telaJogoPrincipal()
 	elif(jogo=="gameover"):
 		telaGameOver()
-
-
+	elif(jogo=="begin"):
+		paginaInicial()
 
 
 #jogo="gameover"
