@@ -31,6 +31,30 @@ orientacaoTiro="NOT"
 
 
 
+
+class Colisao(object):
+	def colisorQuadrado(self,objeto1,objeto2):
+		tamanhoObjeto1=objeto1[0]
+		tamanhoObjeto2=objeto2[0]
+		xObjeto1=objeto1[1]-(objeto1[0]/2)
+		yObjeto1=objeto1[2]-(objeto1[0]/2)
+		xObjeto2=objeto2[1]-(objeto2[0]/2)
+		yObjeto2=objeto2[2]-(objeto2[0]/2)
+		if(xObjeto1+tamanhoObjeto1<xObjeto2):
+			return False
+		if(xObjeto1>xObjeto2+tamanhoObjeto2):
+			return False
+		if(yObjeto1+tamanhoObjeto1<yObjeto2):
+			return False
+		if(yObjeto1>yObjeto2+tamanhoObjeto2):
+			return False
+		return True
+
+
+
+
+
+
 #objeto para controlar os inimigos, aqui iniciamos um paradigma de POO
 class Inimigo(object):
 	def __init__(self,DISPLAYSURF):
@@ -191,6 +215,7 @@ def controleTiro():
 		bala[i].atira()
 		bala[i].drawBala(DISPLAYSURF)
 
+
 		
 #função que atraves de variaveis manipuladas controla a movimentações e ações do tank 		
 def controlePersonagem():
@@ -220,16 +245,27 @@ def tanque(posicao,tamanho):
 		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x-(tamanho/3), y+(tamanho/3), tamanho/3, tamanho/3))
 
 
-inimigo=Inimigo(DISPLAYSURF);
+listaInimigo=list()
+listaInimigo.append(Inimigo(DISPLAYSURF))
+inimigosQTD=1
+
+def controleDeInimigo():
+	global colisao,bala,listaInimigo
+	for i in range(len(listaInimigo)):
+		listaInimigo[i].draw(30);
+		#listaInimigo[i].controleDeMovimento();
+		for j in range(len(bala)):
+			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
+				listaInimigo.append(Inimigo(DISPLAYSURF))
+
+colisao=Colisao()
 
 
-while True:
-	DISPLAYSURF.fill((255, 255, 255))
 
 
-	inimigo.draw(30);
-	inimigo.controleDeMovimento();
-
+def telaJogoPrincipal():
+	global event,pygame,keyPressed,orientacaoTiro
+	controleDeInimigo()
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
@@ -243,6 +279,15 @@ while True:
 	controleTiro()
 	controlePersonagem()
 	tanque(orientacao,30)
+
+
+
+
+while True:
+	#limpa Tela
+	DISPLAYSURF.fill((255, 255, 255))
+
+	telaJogoPrincipal();
 
 	pygame.display.update()
 	fpsClock.tick(30)
