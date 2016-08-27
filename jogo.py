@@ -27,7 +27,7 @@ orientacao="BAIXO"
 #momento de tiro
 orientacaoTiro="NOT"
 
-
+jogo="play"
 
 
 
@@ -62,7 +62,7 @@ class Inimigo(object):
 		self.x=random.randint(1, 450);
 		self.y=random.randint(1, 450);
 		self.posicao="DIREITA";
-		self.teste=list()
+		self.bala=list()
 		self.cont=1
 
 	def controleDeMovimento(self):
@@ -89,25 +89,32 @@ class Inimigo(object):
 
 		if(float(random.randint(1, 1000)) % 100 ==0):
 			self.posicao="CIMA";
-			self.teste.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao))
 		if(float(random.randint(1, 1000)) % 200 ==0):
 			self.posicao="BAIXO";
-			self.teste.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao))
 		if(float(random.randint(1, 1000)) % 300 ==0):
 			self.posicao="DIREITA";
-			self.teste.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao))
 		if(float(random.randint(1, 1000)) % 400 ==0):
 			self.posicao="ESQUERDA";
-			self.teste.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao))
 
 
 		if(self.cont % 20 ==0):
-			self.teste.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao))
 
 
-		for i in range(len(self.teste)):
-			self.teste[i].atira()
-			self.teste[i].drawBala(self.DISPLAYSURF)
+		for i in range(len(self.bala)):
+			self.bala[i].atira()
+			self.bala[i].drawBala(self.DISPLAYSURF)
+			if(self.bala[i].x > 550 or self.bala[i].x < -50):
+				del self.bala[i]
+				break
+			if(self.bala[i].y > 550 or self.bala[i].y < -50):
+				del self.bala[i]
+				break
+
 
 
 
@@ -214,8 +221,12 @@ def controleTiro():
 	for i in range(len(bala)):
 		bala[i].atira()
 		bala[i].drawBala(DISPLAYSURF)
-
-
+		if(bala[i].x > 550 or bala[i].x < -50):
+			del bala[i]
+			break
+		if(bala[i].y > 550 or bala[i].y < -50):
+			del bala[i]
+			break
 		
 #função que atraves de variaveis manipuladas controla a movimentações e ações do tank 		
 def controlePersonagem():
@@ -248,17 +259,36 @@ def tanque(posicao,tamanho):
 listaInimigo=list()
 listaInimigo.append(Inimigo(DISPLAYSURF))
 inimigosQTD=1
+matouInimigo=False
+colisao=Colisao()
+
 
 def controleDeInimigo():
-	global colisao,bala,listaInimigo
+	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo
 	for i in range(len(listaInimigo)):
 		listaInimigo[i].draw(30);
-		#listaInimigo[i].controleDeMovimento();
+		listaInimigo[i].controleDeMovimento();
+
+
+def controleDeColisao():
+	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo
+	for i in range(len(listaInimigo)):
 		for j in range(len(bala)):
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
-				listaInimigo.append(Inimigo(DISPLAYSURF))
+				del bala[j]
+				matouInimigo=True
+				break
+		if(matouInimigo==True):
+			del listaInimigo[i]
+			if(inimigosQTD>5):
+				matouInimigo=False
+			break
 
-colisao=Colisao()
+	if(matouInimigo==True and inimigosQTD<=5):
+		inimigosQTD+=1
+		for aux in range(inimigosQTD):
+			listaInimigo.append(Inimigo(DISPLAYSURF))
+		matouInimigo=False
 
 
 
@@ -277,17 +307,41 @@ def telaJogoPrincipal():
 			orientacaoTiro="NOT"
 
 	controleTiro()
+	controleDeColisao()
 	controlePersonagem()
 	tanque(orientacao,30)
 
 
+def telaGameOver():
+	for event in pygame.event.get():	
+		if event.type == QUIT:
+			finaliza()
+
+	comprimento_ecra = 800
+	altura_ecra = 600
+	ecra = pygame.display.set_mode((comprimento_ecra, altura_ecra))
+
+	#importar imagem
+	image = pygame.image.load("url.png")
+	ecra.blit(image, (250, 200))
 
 
+def menuTela():
+	global jogo
+	if(jogo=="play"):
+		telaJogoPrincipal()
+	elif(jogo=="gameover"):
+		telaGameOver()
+
+
+
+
+#jogo="gameover"
 while True:
 	#limpa Tela
-	DISPLAYSURF.fill((255, 255, 255))
+	DISPLAYSURF.fill((0, 0, 0))
 
-	telaJogoPrincipal();
+	menuTela();
 
 	pygame.display.update()
 	fpsClock.tick(30)
