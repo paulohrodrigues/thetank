@@ -14,6 +14,28 @@ fpsClock = pygame.time.Clock()
 
 #inicio dos objetos-----------------------------------
 
+
+
+
+
+class Explosao(object):
+	def __init__(self,x,y,cor):
+		self.cor  =(random.randint(25,255),random.randint(25,255),random.randint(25,255))
+		self.x 	  =x
+		self.y    =y
+		self.listaExplosao=list()
+		for i in range(20):
+			self.listaExplosao.append([random.randint(-4,4),random.randint(-4,4),self.x,self.y])
+	def explode(self):
+		for i in range(20):
+			self.listaExplosao[i][2]+=self.listaExplosao[i][0]
+			self.listaExplosao[i][3]+=self.listaExplosao[i][1]
+			pygame.draw.rect(DISPLAYSURF,self.cor,(self.listaExplosao[i][2],self.listaExplosao[i][3],8,8))
+		
+
+
+
+
 class Colisao(object):
 	def colisorQuadrado(self,objeto1,objeto2):
 		tamanhoObjeto1=objeto1[0]
@@ -39,7 +61,7 @@ class Inimigo(object):
 	def __init__(self,DISPLAYSURF):
 		self.DISPLAYSURF=DISPLAYSURF
 		self.x=random.randint(1, 450);
-		self.y=random.randint(1, 450);
+		self.y=1
 		self.posicao="DIREITA";
 		self.bala=list()
 		self.cont=1
@@ -68,20 +90,20 @@ class Inimigo(object):
 
 		if(float(random.randint(1, 1000)) % 100 ==0):
 			self.posicao="CIMA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
 		if(float(random.randint(1, 1000)) % 200 ==0):
 			self.posicao="BAIXO";
-			self.bala.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
 		if(float(random.randint(1, 1000)) % 300 ==0):
 			self.posicao="DIREITA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
 		if(float(random.randint(1, 1000)) % 400 ==0):
 			self.posicao="ESQUERDA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
 
 
 		if(self.cont % 20 ==0):
-			self.bala.append(Tiro(self.x,self.y,self.posicao))
+			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
 
 
 		for i in range(len(self.bala)):
@@ -124,11 +146,12 @@ class Inimigo(object):
 #objeto para controlar as balas, aqui iniciamos um paradigma de POO
 class Tiro(object):
 	#construtor do objeto com 3 parametros proposital e um padrão 'self'(padrão da linguagem em cada metodo criado)
-	def __init__(self,x,y,posicao):
+	def __init__(self,x,y,posicao,cor):
 		#atribuição de variaveis passadas como parametro no construtor para variaveis(atributo) do objeto
 		self.x=x
 		self.y=y
 		self.posicao=posicao
+		self.cor=cor
 
 	#metodo que controla a velocidade e direção das balas ao da um tiro
 	def atira(self):
@@ -154,13 +177,13 @@ class Tiro(object):
 	
 	def drawBala(self,DISPLAYSURF):
 		if(self.posicao=="BAIXO"):
-			pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (self.x+12, self.y+30, 5, 5))
+			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+12, self.y+30, 5, 5))
 		elif(self.posicao=="CIMA"):
-			pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (self.x+12, self.y, 5, 5))
+			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+12, self.y, 5, 5))
 		elif(self.posicao=="DIREITA"):
-			pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (self.x+30, self.y+12, 5, 5))
+			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+30, self.y+12, 5, 5))
 		elif(self.posicao=="ESQUERDA"):	
-			pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (self.x, self.y+12, 5, 5))
+			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x, self.y+12, 5, 5))
 
 
 
@@ -187,13 +210,14 @@ matouInimigo=False
 colisao=Colisao()
 piscaLetra=float(0)
 inicializa=False
+listaExplosaoForaDoObjeto=list()
 #variaveis globais---------------------------------------
 
 
 
 
 def zera():
-	global bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
+	global listaExplosaoForaDoObjeto,bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
 	inicializa=False
 	bala=list()
 	#posição inicial do tank
@@ -212,13 +236,13 @@ def zera():
 	matouInimigo=False
 	colisao=Colisao()
 	piscaLetra=float(0)
+	listaExplosaoForaDoObjeto=list()
 
 
 #função basica para finalizar o jogo ao receber o comando de fechamento
 def finaliza():
 	pygame.quit()
 	sys.exit()
-
 
 
 #função que controla todos os eventos recebidos so teclado
@@ -235,7 +259,7 @@ def controleDeEventos(event):
 	if event.key == K_SPACE:
 		orientacaoTiro="OK"
 		#instancia o objeto tiro
-		bala.append(Tiro(x,y,orientacao))
+		bala.append(Tiro(x,y,orientacao,(0,100,0)))
 	else:
 		orientacaoTiro="NOT"
 
@@ -275,15 +299,15 @@ def controlePersonagem():
 def tanque(posicao,tamanho):
 	global x,y
 
-	pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x, y, tamanho, tamanho))
+	pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x, y, tamanho, tamanho))
 	if(posicao=="BAIXO"):
-		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x+(tamanho/3), y+tamanho, tamanho/3, tamanho/3))
+		pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x+(tamanho/3), y+tamanho, tamanho/3, tamanho/3))
 	elif(posicao=="CIMA"):
-		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x+(tamanho/3), y-(tamanho/3), tamanho/3, tamanho/3))
+		pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x+(tamanho/3), y-(tamanho/3), tamanho/3, tamanho/3))
 	elif(posicao=="DIREITA"):
-		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x+tamanho, y+(tamanho/3), tamanho/3, tamanho/3))
+		pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x+tamanho, y+(tamanho/3), tamanho/3, tamanho/3))
 	elif(posicao=="ESQUERDA"):
-		pygame.draw.rect(DISPLAYSURF,  (255, 0, 0), (x-(tamanho/3), y+(tamanho/3), tamanho/3, tamanho/3))
+		pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x-(tamanho/3), y+(tamanho/3), tamanho/3, tamanho/3))
 
 
 def controleDeInimigo():
@@ -294,12 +318,13 @@ def controleDeInimigo():
 
 
 def controleDeColisao():
-	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
+	global listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
 
 	#minha bala no Inimigo
 	for i in range(len(listaInimigo)):
 		for j in range(len(bala)):
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
+				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0)))
 				del bala[j]
 				matouInimigo=True
 				break
@@ -336,6 +361,9 @@ def controleDeColisao():
 			zera()
 			break
 
+	for n in range(len(listaExplosaoForaDoObjeto)):
+		listaExplosaoForaDoObjeto[n].explode()
+ 
 
 
 
@@ -407,12 +435,16 @@ def menuTela():
 		paginaInicial()
 
 
+
+
+
+
+
 #jogo="gameover"
 while True:
 	#limpa Tela
 	DISPLAYSURF.fill((0, 0, 0))
-
 	menuTela();
 
 	pygame.display.update()
-	fpsClock.tick(30)
+	fpsClock.tick(35)
