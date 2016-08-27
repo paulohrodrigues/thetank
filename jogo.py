@@ -233,13 +233,13 @@ def controlePersonagem():
 	global x,y,keyPressed,orientacao,orientacaoTiro
 	
 	if(keyPressed==True and orientacao=="DIREITA" and orientacaoTiro=="NOT"):
-		x+=3
+		x+=4
 	if(keyPressed==True and orientacao=="ESQUERDA" and orientacaoTiro=="NOT"):
-		x-=3
+		x-=4
 	if(keyPressed==True and orientacao=="CIMA" and orientacaoTiro=="NOT"):
-		y-=3
+		y-=4
 	if(keyPressed==True and orientacao=="BAIXO" and orientacaoTiro=="NOT"):
-		y+=3
+		y+=4
 
 
 def tanque(posicao,tamanho):
@@ -271,7 +271,7 @@ def controleDeInimigo():
 
 
 def controleDeColisao():
-	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo
+	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
 	for i in range(len(listaInimigo)):
 		for j in range(len(bala)):
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
@@ -290,7 +290,14 @@ def controleDeColisao():
 			listaInimigo.append(Inimigo(DISPLAYSURF))
 		matouInimigo=False
 
+	for k in range(len(listaInimigo)):
+		for l in range(len(listaInimigo[k].bala)):
 
+			if(colisao.colisorQuadrado([5,listaInimigo[k].bala[l].x,listaInimigo[k].bala[l].y],[30,x,y])==True):
+				jogo="gameover"
+				break
+		if(jogo=="gameover"):
+			break
 
 
 def telaJogoPrincipal():
@@ -317,13 +324,13 @@ def telaGameOver():
 		if event.type == QUIT:
 			finaliza()
 
-	comprimento_ecra = 800
-	altura_ecra = 600
+	comprimento_ecra = 500
+	altura_ecra = 500
 	ecra = pygame.display.set_mode((comprimento_ecra, altura_ecra))
 
 	#importar imagem
 	image = pygame.image.load("url.png")
-	ecra.blit(image, (250, 200))
+	ecra.blit(image, (110, 150))
 
 
 def menuTela():
