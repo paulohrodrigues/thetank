@@ -1,22 +1,19 @@
 # coding: utf8
 import pygame, sys
 from pygame.locals import *
-import random 
+import random
+
 
 #------ inicia padrão do pygame --------------------------------------
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((500, 500))
 pygame.display.set_caption('THE TANK')
 fpsClock = pygame.time.Clock()
+pygame.mixer.init()
 #------ fim dos principios iniciais padrão do pygame ------------------
 
 
-
 #inicio dos objetos-----------------------------------
-
-
-
-
 
 class Explosao(object):
 	def __init__(self,x,y,cor):
@@ -152,7 +149,7 @@ class Tiro(object):
 		self.y=y
 		self.posicao=posicao
 		self.cor=cor
-
+		
 	#metodo que controla a velocidade e direção das balas ao da um tiro
 	def atira(self):
 		if(self.posicao=="BAIXO"):
@@ -163,8 +160,6 @@ class Tiro(object):
 			self.x+=5
 		elif(self.posicao=="ESQUERDA"):	
 			self.x-=5
-
-
 
 	#metodo que imprime de forma grafica na tela uma bala, seguindo uma regra 
 	#condicionada para que der a impressão da bala esta saindo do cano do tank. 
@@ -211,13 +206,16 @@ colisao=Colisao()
 piscaLetra=float(0)
 inicializa=False
 listaExplosaoForaDoObjeto=list()
+auxMusicadeFundo=True
+somTiro =pygame.mixer.Sound("shot.wav")
+somExplosao =pygame.mixer.Sound("explosion.wav")
 #variaveis globais---------------------------------------
 
 
 
 
 def zera():
-	global listaExplosaoForaDoObjeto,bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
+	global auxMusicadeFundo,listaExplosaoForaDoObjeto,bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
 	inicializa=False
 	bala=list()
 	#posição inicial do tank
@@ -229,7 +227,6 @@ def zera():
 	orientacao="BAIXO"
 	#momento de tiro
 	orientacaoTiro="NOT"
-	jogo="gameover"
 	listaInimigo=list()
 	listaInimigo.append(Inimigo(DISPLAYSURF))
 	inimigosQTD=1
@@ -237,7 +234,6 @@ def zera():
 	colisao=Colisao()
 	piscaLetra=float(0)
 	listaExplosaoForaDoObjeto=list()
-
 
 #função basica para finalizar o jogo ao receber o comando de fechamento
 def finaliza():
@@ -247,7 +243,7 @@ def finaliza():
 
 #função que controla todos os eventos recebidos so teclado
 def controleDeEventos(event):
-	global x,y,orientacao,bala,orientacaoTiro
+	global somTiro,x,y,orientacao,bala,orientacaoTiro
 	if event.key == K_LEFT:
 		orientacao="ESQUERDA"
 	if event.key == K_RIGHT:
@@ -259,6 +255,8 @@ def controleDeEventos(event):
 	if event.key == K_SPACE:
 		orientacaoTiro="OK"
 		#instancia o objeto tiro
+		somTiro.play(0)
+		somTiro.set_volume(0.4)
 		bala.append(Tiro(x,y,orientacao,(0,100,0)))
 	else:
 		orientacaoTiro="NOT"
@@ -297,7 +295,7 @@ def controlePersonagem():
 
 
 def tanque(posicao,tamanho):
-	global x,y
+	global x,y,jogo
 
 	pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x, y, tamanho, tamanho))
 	if(posicao=="BAIXO"):
@@ -311,20 +309,31 @@ def tanque(posicao,tamanho):
 
 
 def controleDeInimigo():
-	global colisao,bala,listaInimigo,inimigosQTD,matouInimigo
+	global jogo,colisao,bala,listaInimigo,inimigosQTD,matouInimigo
 	for i in range(len(listaInimigo)):
 		listaInimigo[i].draw(30);
 		listaInimigo[i].controleDeMovimento();
+	if(len(listaInimigo)==0):
+		zera()
+		jogo="vitoria"
+
+
 
 
 def controleDeColisao():
-	global listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
+	global somExplosao,time,listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
 
 	#minha bala no Inimigo
 	for i in range(len(listaInimigo)):
 		for j in range(len(bala)):
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
-				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0)))
+				somExplosao.play(0)
+				somExplosao.set_volume(0.5)
+				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0)))				
+				
+
+
+				
 				del bala[j]
 				matouInimigo=True
 				break
@@ -336,7 +345,7 @@ def controleDeColisao():
 
 	if(matouInimigo==True and inimigosQTD<=5):
 		inimigosQTD+=1
-		for aux in range(3):
+		for aux in range(10):
 			listaInimigo.append(Inimigo(DISPLAYSURF))
 		matouInimigo=False
 
@@ -346,6 +355,8 @@ def controleDeColisao():
 
 			if(colisao.colisorQuadrado([5,listaInimigo[k].bala[l].x,listaInimigo[k].bala[l].y],[30,x,y])==True):
 				jogo="gameover"
+				somExplosao.play(0)
+				somExplosao.set_volume(0.5)
 				zera()
 				break
 		if(jogo=="gameover"):
@@ -355,6 +366,8 @@ def controleDeColisao():
 	for m in range(len(listaInimigo)):
 		if(colisao.colisorQuadrado([30,listaInimigo[m].x,listaInimigo[m].y],[30,x,y])==True):
 				jogo="gameover"
+				somExplosao.play(0)
+				somExplosao.set_volume(0.5)
 				zera()
 				break
 		if(jogo=="gameover"):
@@ -387,7 +400,7 @@ def telaJogoPrincipal():
 	controleDeInimigo()
 
 def telaGameOver():
-	global jogo
+	global jogo,auxMusicadeFundo
 	img = pygame.display.set_mode((500, 500))
 	#importar imagem
 	image = pygame.image.load("url.png")
@@ -398,6 +411,7 @@ def telaGameOver():
 		if event.type == QUIT:
 			finaliza()
 		if(event.type==KEYDOWN):
+			auxMusicadeFundo=True
 			jogo="begin"
 
 
@@ -410,8 +424,13 @@ def palavraPiscando(texto):
 		DISPLAYSURF.blit(label, (30, 450))
 
 def paginaInicial():
-	global jogo,pygame,DISPLAYSURF,piscaLetra
+	global jogo,pygame,DISPLAYSURF,piscaLetra,auxMusicadeFundo
 	img = pygame.display.set_mode((500, 500))
+	if(auxMusicadeFundo==True):
+		auxMusicadeFundo=False
+		pygame.mixer.music.load("music.mp3")
+		pygame.mixer.music.play(-1)
+
 	#importar imagem
 	image = pygame.image.load("fundoInicial.png")
 	img.blit(image, (0, 0))
@@ -425,6 +444,24 @@ def paginaInicial():
 			jogo="play"
 
 
+
+def paginaVitoria():
+	global jogo,auxMusicadeFundo
+	img = pygame.display.set_mode((500, 500))
+	#importar imagem
+	image = pygame.image.load("vitoria.png")
+	img.blit(image, (0, 0))
+	palavraPiscando("PRESSIONE QUALQUER TECLA PARA VOLTAR!");
+
+	for event in pygame.event.get():	
+		if event.type == QUIT:
+			finaliza()
+		if(event.type==KEYDOWN):
+			auxMusicadeFundo=True
+			jogo="begin"	
+
+
+
 def menuTela():
 	global jogo
 	if(jogo=="play"):
@@ -433,11 +470,8 @@ def menuTela():
 		telaGameOver()
 	elif(jogo=="begin"):
 		paginaInicial()
-
-
-
-
-
+	elif(jogo=="vitoria"):
+		paginaVitoria()
 
 
 #jogo="gameover"
