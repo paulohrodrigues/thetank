@@ -3,7 +3,6 @@ import pygame, sys
 from pygame.locals import *
 import random
 
-
 #------ inicia padrão do pygame --------------------------------------
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((500, 500))
@@ -11,7 +10,6 @@ pygame.display.set_caption('THE TANK')
 fpsClock = pygame.time.Clock()
 pygame.mixer.init()
 #------ fim dos principios iniciais padrão do pygame ------------------
-
 
 #inicio dos objetos-----------------------------------
 
@@ -29,10 +27,6 @@ class Explosao(object):
 			self.listaExplosao[i][3]+=self.listaExplosao[i][1]
 			pygame.draw.rect(DISPLAYSURF,self.cor,(self.listaExplosao[i][2],self.listaExplosao[i][3],8,8))
 		
-
-
-
-
 class Colisao(object):
 	def colisorQuadrado(self,objeto1,objeto2):
 		tamanhoObjeto1=objeto1[0]
@@ -50,8 +44,6 @@ class Colisao(object):
 		if(yObjeto1>yObjeto2+tamanhoObjeto2):
 			return False
 		return True
-
-
 
 #objeto para controlar os inimigos, aqui iniciamos um paradigma de POO
 class Inimigo(object):
@@ -137,9 +129,6 @@ class Inimigo(object):
 		elif(self.posicao=="ESQUERDA"):
 			pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x-(tamanho/3), self.y+(tamanho/3), tamanho/3, tamanho/3))
 
-
-
-
 #objeto para controlar as balas, aqui iniciamos um paradigma de POO
 class Tiro(object):
 	#construtor do objeto com 3 parametros proposital e um padrão 'self'(padrão da linguagem em cada metodo criado)
@@ -180,10 +169,7 @@ class Tiro(object):
 		elif(self.posicao=="ESQUERDA"):	
 			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x, self.y+12, 5, 5))
 
-
-
 #fim objetos----------------------------------------------------------------------------
-
 
 #variaveis globais---------------------------------------
 #lista que carregara todas as balas instanciadas
@@ -209,11 +195,14 @@ listaExplosaoForaDoObjeto=list()
 auxMusicadeFundo=True
 somTiro =pygame.mixer.Sound("shot.wav")
 somExplosao =pygame.mixer.Sound("explosion.wav")
+
+#dificuldades e pontuações
+nivel=1
+tanksAbatidos=0
+score=0
 #variaveis globais---------------------------------------
 
-
-
-
+#inicio das funções estruturadas----------------------------
 def zera():
 	global auxMusicadeFundo,listaExplosaoForaDoObjeto,bala,x,y,keyPressed,orientacao,orientacaoTiro,jogo,listaInimigo,inimigosQTD,matouInimigo,colisao,piscaLetra
 	inicializa=False
@@ -240,7 +229,6 @@ def finaliza():
 	pygame.quit()
 	sys.exit()
 
-
 #função que controla todos os eventos recebidos so teclado
 def controleDeEventos(event):
 	global somTiro,x,y,orientacao,bala,orientacaoTiro
@@ -260,8 +248,6 @@ def controleDeEventos(event):
 		bala.append(Tiro(x,y,orientacao,(0,100,0)))
 	else:
 		orientacaoTiro="NOT"
-
-
 
 #função para controlar as balas instanciadas
 def controleTiro():
@@ -284,16 +270,16 @@ def controleTiro():
 def controlePersonagem():
 	global x,y,keyPressed,orientacao,orientacaoTiro
 	
-	if(keyPressed==True and orientacao=="DIREITA" and orientacaoTiro=="NOT"):
+	if(keyPressed==True and orientacao=="DIREITA" and orientacaoTiro=="NOT" and x <=470):
 		x+=4
-	if(keyPressed==True and orientacao=="ESQUERDA" and orientacaoTiro=="NOT"):
+	if(keyPressed==True and orientacao=="ESQUERDA" and orientacaoTiro=="NOT" and x >=0):
 		x-=4
-	if(keyPressed==True and orientacao=="CIMA" and orientacaoTiro=="NOT"):
+	if(keyPressed==True and orientacao=="CIMA" and orientacaoTiro=="NOT" and y>=0):
 		y-=4
-	if(keyPressed==True and orientacao=="BAIXO" and orientacaoTiro=="NOT"):
+	if(keyPressed==True and orientacao=="BAIXO" and orientacaoTiro=="NOT" and y<=470):
 		y+=4
 
-
+#função que desenha o tank do personagem principal
 def tanque(posicao,tamanho):
 	global x,y,jogo
 
@@ -307,21 +293,18 @@ def tanque(posicao,tamanho):
 	elif(posicao=="ESQUERDA"):
 		pygame.draw.rect(DISPLAYSURF,  (0,100,0), (x-(tamanho/3), y+(tamanho/3), tamanho/3, tamanho/3))
 
-
 def controleDeInimigo():
-	global jogo,colisao,bala,listaInimigo,inimigosQTD,matouInimigo
+	global nivel,jogo,colisao,bala,listaInimigo,inimigosQTD,matouInimigo
 	for i in range(len(listaInimigo)):
 		listaInimigo[i].draw(30);
 		listaInimigo[i].controleDeMovimento();
 	if(len(listaInimigo)==0):
 		zera()
+		nivel+=1
 		jogo="vitoria"
 
-
-
-
 def controleDeColisao():
-	global somExplosao,time,listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
+	global score,tanksAbatidos,nivel,somExplosao,time,listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
 
 	#minha bala no Inimigo
 	for i in range(len(listaInimigo)):
@@ -330,14 +313,12 @@ def controleDeColisao():
 				somExplosao.play(0)
 				somExplosao.set_volume(0.5)
 				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0)))				
-				
-
-
-				
 				del bala[j]
 				matouInimigo=True
 				break
 		if(matouInimigo==True):
+			score+=5
+			tanksAbatidos+=1
 			del listaInimigo[i]
 			if(inimigosQTD>5):
 				matouInimigo=False
@@ -345,7 +326,7 @@ def controleDeColisao():
 
 	if(matouInimigo==True and inimigosQTD<=5):
 		inimigosQTD+=1
-		for aux in range(10):
+		for aux in range(nivel):
 			listaInimigo.append(Inimigo(DISPLAYSURF))
 		matouInimigo=False
 
@@ -376,9 +357,6 @@ def controleDeColisao():
 
 	for n in range(len(listaExplosaoForaDoObjeto)):
 		listaExplosaoForaDoObjeto[n].explode()
- 
-
-
 
 def telaJogoPrincipal():
 	global event,pygame,keyPressed,orientacaoTiro
@@ -400,20 +378,34 @@ def telaJogoPrincipal():
 	controleDeInimigo()
 
 def telaGameOver():
-	global jogo,auxMusicadeFundo
+	global score,tanksAbatidos,nivel,jogo,auxMusicadeFundo
 	img = pygame.display.set_mode((500, 500))
 	#importar imagem
 	image = pygame.image.load("url.png")
 	img.blit(image, (110, 150))
-	palavraPiscando("PRESSIONE QUALQUER TECLA PARA VOLTAR!");
+	telaDePontuacao()
+	palavraPiscando("PRESSIONE TECLA TAB PARA VOLTAR!");
 
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
 		if(event.type==KEYDOWN):
-			auxMusicadeFundo=True
-			jogo="begin"
+			if(event.key==K_TAB):
+				auxMusicadeFundo=True
+				nivel=1
+				tanksAbatidos=0
+				score=0
+				jogo="begin"
 
+def telaDePontuacao():
+	global score,tanksAbatidos,DISPLAYSURF
+
+	minhaFont = pygame.font.SysFont("monospace", 20)
+	
+	label1 = minhaFont.render("INIMIGOS ABATIDOS: "+str(tanksAbatidos), 1, (255,255,0))
+	DISPLAYSURF.blit(label1, (20, 350))
+	label2 = minhaFont.render("SCORE ACUMULADO: "+str(score), 1, (255,255,0))
+	DISPLAYSURF.blit(label2, (20, 400))
 
 def palavraPiscando(texto):
 	global piscaLetra
@@ -421,7 +413,7 @@ def palavraPiscando(texto):
 	minhaFont = pygame.font.SysFont("monospace", 20)
 	label = minhaFont.render(texto, 1, (255,255,0))
 	if(piscaLetra%5<=3):
-		DISPLAYSURF.blit(label, (30, 450))
+		DISPLAYSURF.blit(label, (20, 450))
 
 def paginaInicial():
 	global jogo,pygame,DISPLAYSURF,piscaLetra,auxMusicadeFundo
@@ -435,32 +427,33 @@ def paginaInicial():
 	image = pygame.image.load("fundoInicial.png")
 	img.blit(image, (0, 0))
 
-	palavraPiscando("PRESSIONE QUALQUER TECLA PARA INICIAR!");
+	palavraPiscando("PRESSIONE TECLA TAB PARA INICIAR!")
 
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
 		if(event.type==KEYDOWN):
-			jogo="play"
-
-
+			if(event.key==K_TAB):
+				jogo="play"
 
 def paginaVitoria():
 	global jogo,auxMusicadeFundo
+
 	img = pygame.display.set_mode((500, 500))
 	#importar imagem
 	image = pygame.image.load("vitoria.png")
 	img.blit(image, (0, 0))
-	palavraPiscando("PRESSIONE QUALQUER TECLA PARA VOLTAR!");
+	palavraPiscando("PRESSIONE TECLA TAB PARA CONTINUAR!");
 
+	telaDePontuacao()
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
 		if(event.type==KEYDOWN):
-			auxMusicadeFundo=True
-			jogo="begin"	
-
-
+			if(event.key==K_TAB):
+				auxMusicadeFundo=True
+				zera()
+				jogo="play"
 
 def menuTela():
 	global jogo
@@ -472,7 +465,6 @@ def menuTela():
 		paginaInicial()
 	elif(jogo=="vitoria"):
 		paginaVitoria()
-
 
 #jogo="gameover"
 while True:
