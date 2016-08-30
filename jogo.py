@@ -2,6 +2,11 @@
 import pygame, sys
 from pygame.locals import *
 import random
+from banco import Banco
+from explosao import Explosao
+from colisao import Colisao
+from tiro import Tiro
+from inimigo import Inimigo
 
 #------ inicia padrão do pygame --------------------------------------
 pygame.init()
@@ -11,167 +16,10 @@ fpsClock = pygame.time.Clock()
 pygame.mixer.init()
 #------ fim dos principios iniciais padrão do pygame ------------------
 
-#inicio dos objetos-----------------------------------
-
-class Explosao(object):
-	def __init__(self,x,y,cor):
-		self.cor  =(random.randint(25,255),random.randint(25,255),random.randint(25,255))
-		self.x 	  =x
-		self.y    =y
-		self.listaExplosao=list()
-		for i in range(20):
-			self.listaExplosao.append([random.randint(-4,4),random.randint(-4,4),self.x,self.y])
-	def explode(self):
-		for i in range(20):
-			self.listaExplosao[i][2]+=self.listaExplosao[i][0]
-			self.listaExplosao[i][3]+=self.listaExplosao[i][1]
-			pygame.draw.rect(DISPLAYSURF,self.cor,(self.listaExplosao[i][2],self.listaExplosao[i][3],8,8))
-		
-class Colisao(object):
-	def colisorQuadrado(self,objeto1,objeto2):
-		tamanhoObjeto1=objeto1[0]
-		tamanhoObjeto2=objeto2[0]
-		xObjeto1=objeto1[1]-(objeto1[0]/2)
-		yObjeto1=objeto1[2]-(objeto1[0]/2)
-		xObjeto2=objeto2[1]-(objeto2[0]/2)
-		yObjeto2=objeto2[2]-(objeto2[0]/2)
-		if(xObjeto1+tamanhoObjeto1<xObjeto2):
-			return False
-		if(xObjeto1>xObjeto2+tamanhoObjeto2):
-			return False
-		if(yObjeto1+tamanhoObjeto1<yObjeto2):
-			return False
-		if(yObjeto1>yObjeto2+tamanhoObjeto2):
-			return False
-		return True
-
-#objeto para controlar os inimigos, aqui iniciamos um paradigma de POO
-class Inimigo(object):
-	def __init__(self,DISPLAYSURF):
-		self.DISPLAYSURF=DISPLAYSURF
-		self.x=random.randint(1, 450);
-		self.y=1
-		self.posicao="DIREITA";
-		self.bala=list()
-		self.cont=1
-
-	def controleDeMovimento(self):
-		self.cont+=1
-		if(self.cont>=1000):
-			self.cont=1
-
-
-		if(self.x>=450):
-			self.x-=1
-			self.posicao="CIMA";
-		if(self.x<=10):
-			self.x+=1
-			self.posicao="BAIXO";
-		if(self.y>=450):
-			self.y-=1
-			self.posicao="DIREITA";
-		if(self.y<10):
-			self.y+=1
-			self.posicao="ESQUERDA";
-		
-		
-		
-
-		if(float(random.randint(1, 1000)) % 100 ==0):
-			self.posicao="CIMA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
-		if(float(random.randint(1, 1000)) % 200 ==0):
-			self.posicao="BAIXO";
-			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
-		if(float(random.randint(1, 1000)) % 300 ==0):
-			self.posicao="DIREITA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
-		if(float(random.randint(1, 1000)) % 400 ==0):
-			self.posicao="ESQUERDA";
-			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
-
-
-		if(self.cont % 20 ==0):
-			self.bala.append(Tiro(self.x,self.y,self.posicao,(255,0,0)))
-
-
-		for i in range(len(self.bala)):
-			self.bala[i].atira()
-			self.bala[i].drawBala(self.DISPLAYSURF)
-			if(self.bala[i].x > 550 or self.bala[i].x < -50):
-				del self.bala[i]
-				break
-			if(self.bala[i].y > 550 or self.bala[i].y < -50):
-				del self.bala[i]
-				break
-
-
-
-
-		if(self.posicao=="DIREITA"):
-			self.x+=3
-		if(self.posicao=="ESQUERDA"):
-			self.x-=3
-		if(self.posicao=="CIMA"):
-			self.y-=3
-		if(self.posicao=="BAIXO"):
-			self.y+=3
-
-
-	def draw(self,tamanho):
-		pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x, self.y, tamanho, tamanho))
-		if(self.posicao=="BAIXO"):
-			pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x+(tamanho/3), self.y+tamanho, tamanho/3, tamanho/3))
-		elif(self.posicao=="CIMA"):
-			pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x+(tamanho/3), self.y-(tamanho/3), tamanho/3, tamanho/3))
-		elif(self.posicao=="DIREITA"):
-			pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x+tamanho, self.y+(tamanho/3), tamanho/3, tamanho/3))
-		elif(self.posicao=="ESQUERDA"):
-			pygame.draw.rect(self.DISPLAYSURF,  (255, 0, 0), (self.x-(tamanho/3), self.y+(tamanho/3), tamanho/3, tamanho/3))
-
-#objeto para controlar as balas, aqui iniciamos um paradigma de POO
-class Tiro(object):
-	#construtor do objeto com 3 parametros proposital e um padrão 'self'(padrão da linguagem em cada metodo criado)
-	def __init__(self,x,y,posicao,cor):
-		#atribuição de variaveis passadas como parametro no construtor para variaveis(atributo) do objeto
-		self.x=x
-		self.y=y
-		self.posicao=posicao
-		self.cor=cor
-		
-	#metodo que controla a velocidade e direção das balas ao da um tiro
-	def atira(self):
-		if(self.posicao=="BAIXO"):
-			self.y+=5
-		elif(self.posicao=="CIMA"):
-			self.y-=5
-		elif(self.posicao=="DIREITA"):
-			self.x+=5
-		elif(self.posicao=="ESQUERDA"):	
-			self.x-=5
-
-	#metodo que imprime de forma grafica na tela uma bala, seguindo uma regra 
-	#condicionada para que der a impressão da bala esta saindo do cano do tank. 
-	#O valor 12 significa a metade do tamanho total do tank menos(-) mais ou menos a metade da bala,
-	#sabendo que a metade do tank é: 15 e mais ou menos a metade da bala é 3, logo  15 - 3 = 12.
-	#O valor 30 é referente ao tamanho total do tank, poderia ser somado ao tamanho do cano
-	#do tank para deixar mais exato, porem o tanho é tão pequeno que a velocidade da saida da
-	#bala compensa a diferença fazendo com que não seja necessario fazer a somatoria dos tamanhos.
-	#O numero 5 é simplesmente a largura e a altura que a bala vai assumir ao ser instanciada.
-	
-	def drawBala(self,DISPLAYSURF):
-		if(self.posicao=="BAIXO"):
-			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+12, self.y+30, 5, 5))
-		elif(self.posicao=="CIMA"):
-			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+12, self.y, 5, 5))
-		elif(self.posicao=="DIREITA"):
-			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x+30, self.y+12, 5, 5))
-		elif(self.posicao=="ESQUERDA"):	
-			pygame.draw.rect(DISPLAYSURF,  self.cor, (self.x, self.y+12, 5, 5))
-
-#fim objetos----------------------------------------------------------------------------
-
 #variaveis globais---------------------------------------
+#banco
+banco=Banco()
+banco.criadorDeTabelas()
 #lista que carregara todas as balas instanciadas
 bala=list()
 #posição inicial do tank
@@ -226,6 +74,8 @@ def zera():
 
 #função basica para finalizar o jogo ao receber o comando de fechamento
 def finaliza():
+	global banco
+	banco.fechaConexao()
 	pygame.quit()
 	sys.exit()
 
@@ -304,7 +154,7 @@ def controleDeInimigo():
 		jogo="vitoria"
 
 def controleDeColisao():
-	global score,tanksAbatidos,nivel,somExplosao,time,listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
+	global banco,DISPLAYSURF,score,tanksAbatidos,nivel,somExplosao,time,listaExplosaoForaDoObjeto,colisao,bala,listaInimigo,inimigosQTD,matouInimigo,jogo,x,y
 
 	#minha bala no Inimigo
 	for i in range(len(listaInimigo)):
@@ -312,7 +162,7 @@ def controleDeColisao():
 			if(colisao.colisorQuadrado([5,bala[j].x,bala[j].y],[30,listaInimigo[i].x,listaInimigo[i].y])==True):
 				somExplosao.play(0)
 				somExplosao.set_volume(0.5)
-				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0)))				
+				listaExplosaoForaDoObjeto.append(Explosao(bala[j].x,bala[j].y,(0,255,0),DISPLAYSURF))				
 				del bala[j]
 				matouInimigo=True
 				break
@@ -339,6 +189,7 @@ def controleDeColisao():
 				somExplosao.play(0)
 				somExplosao.set_volume(0.5)
 				zera()
+				banco.inserir(score)
 				break
 		if(jogo=="gameover"):
 			zera()
@@ -350,6 +201,7 @@ def controleDeColisao():
 				somExplosao.play(0)
 				somExplosao.set_volume(0.5)
 				zera()
+				banco.inserir(score)
 				break
 		if(jogo=="gameover"):
 			zera()
@@ -383,29 +235,39 @@ def telaGameOver():
 	#importar imagem
 	image = pygame.image.load("url.png")
 	img.blit(image, (110, 150))
-	telaDePontuacao()
+	telaDePontuacao(False)
 	palavraPiscando("PRESSIONE TECLA TAB PARA VOLTAR!");
 
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN):
-			if(event.key==K_TAB):
-				auxMusicadeFundo=True
-				nivel=1
-				tanksAbatidos=0
-				score=0
-				jogo="begin"
+		if(event.type==KEYDOWN and event.key==K_TAB):
+			auxMusicadeFundo=True
+			nivel=1
+			tanksAbatidos=0
+			score=0
+			jogo="begin"
 
-def telaDePontuacao():
-	global score,tanksAbatidos,DISPLAYSURF
+def telaDePontuacao(vitoria):
+	global banco,score,tanksAbatidos,DISPLAYSURF,nivel
 
 	minhaFont = pygame.font.SysFont("monospace", 20)
 	
-	label1 = minhaFont.render("INIMIGOS ABATIDOS: "+str(tanksAbatidos), 1, (255,255,0))
-	DISPLAYSURF.blit(label1, (20, 350))
-	label2 = minhaFont.render("SCORE ACUMULADO: "+str(score), 1, (255,255,0))
-	DISPLAYSURF.blit(label2, (20, 400))
+	if(vitoria==True):
+		label = minhaFont.render("NIVEL: "+str(nivel), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 300))
+		label = minhaFont.render("PONTOS ACUMULADO: "+str(score), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 400))	
+		label = minhaFont.render("INIMIGOS ABATIDOS: "+str(tanksAbatidos), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 350))
+	else:
+		label = minhaFont.render("RECORD: "+str(banco.busca()[0][1]), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 50))
+		label = minhaFont.render("PONTOS ACUMULADO: "+str(score), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 80))
+		label = minhaFont.render("INIMIGOS ABATIDOS: "+str(tanksAbatidos), 1, (255,255,0))
+		DISPLAYSURF.blit(label, (20, 110))
+
 
 def palavraPiscando(texto):
 	global piscaLetra
@@ -432,9 +294,8 @@ def paginaInicial():
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN):
-			if(event.key==K_TAB):
-				jogo="play"
+		if(event.type==KEYDOWN and event.key==K_TAB):
+			jogo="play"
 
 def paginaVitoria():
 	global jogo,auxMusicadeFundo
@@ -445,15 +306,14 @@ def paginaVitoria():
 	img.blit(image, (0, 0))
 	palavraPiscando("PRESSIONE TECLA TAB PARA CONTINUAR!");
 
-	telaDePontuacao()
+	telaDePontuacao(True)
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN):
-			if(event.key==K_TAB):
-				auxMusicadeFundo=True
-				zera()
-				jogo="play"
+		if(event.type==KEYDOWN and event.key==K_TAB):
+			auxMusicadeFundo=True
+			zera()
+			jogo="play"
 
 def menuTela():
 	global jogo
