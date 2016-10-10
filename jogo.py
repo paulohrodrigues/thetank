@@ -241,7 +241,8 @@ def telaGameOver():
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN and event.key==K_TAB):
+		
+		if(event.key==K_TAB):
 			auxMusicadeFundo=True
 			nivel=1
 			tanksAbatidos=0
@@ -294,8 +295,9 @@ def paginaInicial():
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN and event.key==K_TAB):
-			jogo="play"
+		if(event.type==KEYDOWN):
+			if(event.key==K_TAB):
+				jogo="play"
 
 def paginaVitoria():
 	global jogo,auxMusicadeFundo
@@ -310,7 +312,7 @@ def paginaVitoria():
 	for event in pygame.event.get():	
 		if event.type == QUIT:
 			finaliza()
-		if(event.type==KEYDOWN and event.key==K_TAB):
+		if(event.key==K_TAB):
 			auxMusicadeFundo=True
 			zera()
 			jogo="play"
